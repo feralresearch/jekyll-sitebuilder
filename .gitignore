@@ -1,0 +1,7 @@
+_site
+.sass-cache
+.jekyll-metadata
+homepage.psd
+.asset-cache
+node_modules
+package-lock.json
