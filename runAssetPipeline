@@ -5,3 +5,6 @@ echo "================================="
 node ./asset_pipeline.js --scss_in=../_assets/scss/**/*.scss --scss_out=../_site/assets/css
 node ./asset_pipeline.js --js_in=../_assets/js/**/*.js --js_out=../_site/assets/js
 node ./asset_pipeline.js --img_in=../_assets/img/**/* --img_out=../_site/assets/img
+
+node ./generate_collectionStubFiles.js --clean --jekyll_src=../ --list_in=../_site/assets/data/category_listing.csv --type=categories
+node ./generate_collectionStubFiles.js --clean --jekyll_src=../ --list_in=../_site/assets/data/tag_listing.csv --type=tags
