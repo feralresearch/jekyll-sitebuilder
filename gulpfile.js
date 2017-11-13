@@ -111,11 +111,13 @@ gulp.task('browserSync_serve', function(gulpCallback) {
 	});
 
 	// Run the render / stubs / render once at startup
+	generateAssets.processSCSS();
+	generateAssets.processJS();
 	runSequence(
 		'jekyll_render',
 		'generate_tagStubs',
 		'generate_categoryStubs',
-		'jekyll_render',
+		'jekyll_render'
 	);
 
 

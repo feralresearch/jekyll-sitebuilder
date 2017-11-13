@@ -5,7 +5,7 @@
 const concat = require('gulp-concat');
 const sass = require('gulp-sass');
 const autoprefixer = require('gulp-autoprefixer');
-const minifycss = require('gulp-minify-css');
+const cleanCSS = require('gulp-clean-css');
 const rename = require('gulp-rename');
 const argv = require('minimist')(process.argv.slice(2));
 const gulp = require('gulp');
@@ -37,7 +37,10 @@ gulp.task('generateAssets_sass', () => {
 	if (runningAsScript){
 		console.log("AssetPipeline: SASS Handler - compiling");
 	}
-	gulp.src(scss_files_in).pipe(sass()).pipe(gulp.dest(scss_files_out));
+	gulp.src(scss_files_in)
+		.pipe(sass())
+		.pipe(cleanCSS({compatibility: 'ie8'}))
+		.pipe(gulp.dest(scss_files_out));
 });
 
 // Public methods
@@ -60,7 +63,6 @@ module.exports = {
 	// Do SCSS processing
 	processSCSS: function() {
 		runSequence('generateAssets_sass');
-		return "Asset Pipeline: SCSS processing";
 	},
 
 	// Do IMG processing
