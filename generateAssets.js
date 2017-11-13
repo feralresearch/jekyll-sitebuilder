@@ -1,4 +1,4 @@
-// asset_pipeline
+// generateAssets
 // ================
 
 // Requires
@@ -17,7 +17,7 @@ var scss_files, js_files, img_files;
 var runningAsScript = !module.parent;
 
 // Gulp tasks
-gulp.task('js_handler', () => {
+gulp.task('generateAssets_js', () => {
 	if (runningAsScript){
 		console.log("AssetPipeline: JS Handler - not implemented yet, passing files through --->");
 	}
@@ -25,7 +25,7 @@ gulp.task('js_handler', () => {
 	gulp.src(js_files_in).pipe(gulp.dest(js_files_out));
 });
 
-gulp.task('img_handler', () => {
+gulp.task('generateAssets_img', () => {
 	if (runningAsScript){
 		console.log("AssetPipeline: IMG Handler - not implemented yet, passing files through --->");
 	}
@@ -33,7 +33,7 @@ gulp.task('img_handler', () => {
 	gulp.src(img_files_in).pipe(gulp.dest(img_files_out));
 });
 
-gulp.task('sass_handler', () => {
+gulp.task('generateAssets_sass', () => {
 	if (runningAsScript){
 		console.log("AssetPipeline: SASS Handler - compiling");
 	}
@@ -59,19 +59,19 @@ module.exports = {
 
 	// Do SCSS processing
 	processSCSS: function() {
-		runSequence('sass_handler');
+		runSequence('generateAssets_sass');
 		return "Asset Pipeline: SCSS processing";
 	},
 
 	// Do IMG processing
 	processIMG: function() {
-		runSequence('img_handler');
+		runSequence('generateAssets_img');
 		return "Asset Pipeline: IMG processing";
 	},
 
 	// Do JS processing
 	processJS: function() {
-		runSequence('js_handler');
+		runSequence('generateAssets_js');
 		return "Asset Pipeline: JS processing";
 	}
 
@@ -104,6 +104,6 @@ if(
 
 	if (runningAsScript){
 		console.log('USAGE: asset_pipline [--scss_in --scss_out | --js_in --js_out | --img_in --img_out  ]');
-		console.log('EXAMPLE: node ./asset_pipeline.js --scss_in=_assets/scss/**/*.scss --scss_out=/Users/andrew/Desktop/Output');
+		console.log('EXAMPLE: node ./generateAssets.js --scss_in=_assets/scss/**/*.scss --scss_out=/Users/andrew/Desktop/Output');
 	}
 }

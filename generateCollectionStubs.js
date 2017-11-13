@@ -19,11 +19,14 @@ gulp.task('generate', () => {
 	if (runningAsScript){
 		console.log("GENERATE_STUBFILES: ** Generating '"+collection_name+"'");
 	}else{
-		console.log("Working with: "+list_in);
+		//console.log("Working with: "+list_in);
 	}
 
 	// Set output path
 	var outputPath = jekyll_src+"_"+collection_name;
+	var outputName = (collection_name==='categories')?'category':collection_name;
+	var outputName = (collection_name==='tags')?'tag':collection_name;
+
 	if (! fs.existsSync(outputPath)){
 		 fs.mkdirSync(outputPath, 0744);
 	}
@@ -54,23 +57,20 @@ gulp.task('generate', () => {
 				}else{
 					/*
 						YAML frontmatter stub
-
 						---
 						layout: tag_listing
 						name: TAG NAME
 						---
 					*/
-					fs.writeFile(outputFile,
-											  '---\n'+
-											  //'# This is a generated file, you can make changes and they will NOT be overwritten.\n'+
-											  //'# To re-generate the file, delete it\n'+
+					var stubContents =
+									'---\n'+
+								 	//'# This is a generated file, you can make changes and they will NOT be overwritten.\n'+
+									//'# To re-generate the file, delete it\n'+
+									'layout: '+outputName+'_listing\n'+
+									'name: '+item_name+'\n'+
+									'---\n';
 
-											  'layout: tag_listing\n'+
-											  'name: '+ item_name +'\n'+
-											  '---\n'
-
-											  ,function (err) {if (err) {} else {}});
-
+					fs.writeFile(outputFile,stubContents,function (err) {if (err) {} else {}});
 					console.log('GENERATE_STUBFILES: Creating:' + outputFile);
 				}
 			}
@@ -82,7 +82,7 @@ gulp.task('generate', () => {
 	function runCleanup(){
 		// Clean up if requested
 		if(clean){
-			console.log("GENERATE_STUBFILES: ** Cleaning... ");
+			//console.log("GENERATE_STUBFILES: ** Cleaning... ");
 
 			// Loop over the directory
 			fs.readdir(outputPath, function(err, items) {
@@ -141,7 +141,7 @@ if(
 }else{
 
 	if (runningAsScript){
-		console.log('USAGE: generate_collectionStubFiles --clean=true|false [--jekyll_src=PATH --list_in=CSVFILE --type=categories|tags]');
-		console.log('EXAMPLE: node ./generate_collectionStubFiles.js --clean=true --jekyll_src=../ --list_in=../_site/data/category_listing.csv --type=categories');
+		console.log('USAGE: generateCollectionStubs --clean=true|false [--jekyll_src=PATH --list_in=CSVFILE --type=categories|tags]');
+		console.log('EXAMPLE: node ./generateCollectionStubs.js --clean=true --jekyll_src=../ --list_in=../_site/data/category_listing.csv --type=categories');
 	}
 }

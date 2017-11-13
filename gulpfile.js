@@ -1,46 +1,21 @@
 // gulpfile.js
-/*
-
-npm init
-
-https://gulpjs.com/
-
-npm install gulp-cli -g
-npm install gulp -D
-
-npm install gulp
-npm install gulp-util
-npm install gulp-sass
-npm install gulp-autoprefixer
-npm install gulp-minify-css
-npm install gulp-rename
-npm install gulp-exec
-npm install gulp-livereload
-npm install tiny-lr
-
-npm install livereload
-
-https://blog.iansinnott.com/super-birthday-post/
-
-https://www.npmjs.com/package/livereload
-
-*/
+//
+//
+//////////////////////////////////////////
 
 // BrowserSync settings
 const server_port = 4000;
 const open_browser_on_start = false;
 
 // Where do the jekyll files live?
-// 	_assets
-//		- scss
-// 		- js
-//		- img
 const siteRoot = '../_site';
-const files_siteContent  = [
+const files_siteContent =
+	[
 		'../_includes/**/*',
         '../_layouts/**/*',
         '../_posts/**/*',
-        '../_pages/**/*'];
+        '../_pages/**/*'
+	];
 
 const files_scssAssets_in = '../_assets/scss/**/*.scss';
 const files_scssAssets_out = '../_assets/scss/**/*.scss';
@@ -57,36 +32,32 @@ const files_imgAssets_out = siteRoot + '/assets/img';
 const files_tagList = '../_site/assets/data/tag_listing.csv';
 const files_categoryList = '../_site/assets/data/category_listing.csv';
 
-// We use our own asset pipline to handle CSS, JS, Sass and Images
-// Asset pipline split out so it can be run seperately
-// by a deployment server for instance
-const assetPipeline = require('./asset_pipeline');
-const stubGenerator = require('./generate_collectionStubFiles');
+// We use our own scripts handle CSS, JS, Sass and Images and category stub generation
+const generateAssets = require('./generateAssets');
+const generateStubs = require('./generateCollectionStubs');
 
-
-// Other packages we require
+// Node requirements
 const gulp = require('gulp');
 const gutil = require('gulp-util');
 const child = require('child_process');
 const browserSync = require('browser-sync').create();
 const hygienist = require('hygienist-middleware');
 const runSequence = require('run-sequence');
+
 //////////////////////////////////////////////////////////////////////
 
-
-
-
 // Jekyll itself
-// Jekyll does the job of actually watching and jekyll-ing
+// Jekyll does the job of compiling the site
 // We use _config.yml to exclude the assets directory,
 // which we will handle ourselves with gulp
-gulp.task('jekyll', () => {
+gulp.task('jekyll_render', () => {
 	const jekyll = child.spawn('jekyll',
 		['build',
 		'--source', '../',
 		'--destination', siteRoot,
 		//'--incremental',
-		'--drafts'
+		'--drafts',
+		'--quiet'
 	]);
 
 	// Clean up jekyll log so it looks nice alongside Gulp output
@@ -99,34 +70,34 @@ gulp.task('jekyll', () => {
 	jekyll.stderr.on('data', jekyllLogger);
 });
 
-
+// Generate the tag stubs
 gulp.task('generate_tagStubs', () => {
-	stubGenerator.init({
+	generateStubs.init({
 		'jekyll_src': '../',
 		'list_in': files_tagList,
 		'type': 'tags',
 		'clean': true
 	});
-
-	stubGenerator.generate();
+	generateStubs.generate();
 });
 
+// Generate the category stubs
 gulp.task('generate_categoryStubs', () => {
-	stubGenerator.init({
+	generateStubs.init({
 		'jekyll_src': '../',
 		'list_in': files_categoryList,
 		'type': 'categories',
 		'clean': true
 	});
-	stubGenerator.generate();
+	generateStubs.generate();
 });
 
 
 // Watch and Serve (Main function)
-gulp.task('serve', function(gulpCallback) {
+gulp.task('browserSync_serve', function(gulpCallback) {
 
 	// Setup asset pipline
-	assetPipeline.init({
+	generateAssets.init({
 		browserSync: browserSync,
 
 		scss_files_in: files_scssAssets_in,
@@ -139,12 +110,13 @@ gulp.task('serve', function(gulpCallback) {
 		img_files_out: files_imgAssets_out
 	});
 
-	// Run the asset pipeline once at start
-	// This gets run again on watch (below) on file change
-	assetPipeline.processSCSS();
-	assetPipeline.processJS();
-	assetPipeline.processIMG();
-
+	// Run the render / stubs / render once at startup
+	runSequence(
+		'jekyll_render',
+		'generate_tagStubs',
+		'generate_categoryStubs',
+		'jekyll_render',
+	);
 
 
 	// Setup browserSync
@@ -165,24 +137,28 @@ gulp.task('serve', function(gulpCallback) {
 		},
 		logLevel: "silent"
 
-		// BrowserSync server is now up...
+	// BrowserSync server is now up...
 	}, function callback() {
 
-		// Watch the non-assets
-		var watcher = gulp.watch(files_siteContent, console.log("CHangE!"));
+		// Watch non-assets
+		var watcher = gulp.watch(files_siteContent);
 		watcher.on('change', function(event) {
-		  console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+		  //console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+
+		  // This could be gulp.series, once v4 is released
+		  // Sequence is important so we don't get stuck in a loop
 		  runSequence(
 			  		'generate_tagStubs',
   					'generate_categoryStubs',
-  					'jekyll',
-  					browserSync.reload);
+  					'jekyll_render',
+				 	 //generateAssets.processIMG,
+  					 browserSync.reload
+				);
 		});
 
-		// Handle the assets
-		gulp.watch(files_scssAssets_in, assetPipeline.processSCSS);
-		gulp.watch(files_jsAssets_in, assetPipeline.processJS);
-		gulp.watch(files_imgAssets_in, assetPipeline.processIMG);
+		// Handle the js/css assets via injection
+		gulp.watch(files_scssAssets_in, generateAssets.processSCSS);
+		gulp.watch(files_jsAssets_in, generateAssets.processJS);
 
 		// Notify gulp that this task is done
 		gulpCallback();
@@ -190,4 +166,4 @@ gulp.task('serve', function(gulpCallback) {
 });
 
 // Default task: launch jekyll, watch
-gulp.task('default', ['jekyll', 'serve']);
+gulp.task('default', ['jekyll_render', 'browserSync_serve']);
