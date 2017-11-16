@@ -38,7 +38,7 @@ gulp.task('generateAssets_sass', () => {
 		console.log("AssetPipeline: SASS Handler - compiling");
 	}
 	gulp.src(scss_files_in)
-		.pipe(sass())
+		.pipe(sass().on('error', sass.logError))
 		.pipe(cleanCSS({compatibility: 'ie8'}))
 		.pipe(gulp.dest(scss_files_out));
 });
