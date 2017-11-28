@@ -92,6 +92,10 @@ gulp.task('generate_categoryStubs', () => {
 	generateStubs.generate();
 });
 
+gulp.task('copy_data', () => {
+	gulp.src('../assets/data/*').pipe(gulp.dest('../_site/assets/data/'));
+});
+
 
 // Watch and Serve (Main function)
 gulp.task('browserSync_serve', function(gulpCallback) {
@@ -114,6 +118,7 @@ gulp.task('browserSync_serve', function(gulpCallback) {
 	generateAssets.processSCSS();
 	generateAssets.processJS();
 	runSequence(
+		'copy_data',
 		'jekyll_render',
 		'generate_tagStubs',
 		'generate_categoryStubs',
@@ -135,7 +140,7 @@ gulp.task('browserSync_serve', function(gulpCallback) {
 		ghostMode: {
 			clicks: true,
 			forms: true,
-			scroll: false
+			scroll: true
 		},
 		logLevel: "silent"
 
