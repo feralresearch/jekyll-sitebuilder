@@ -8,29 +8,38 @@ const server_port = 4000;
 const open_browser_on_start = false;
 
 // Where do the jekyll files live?
-const siteRoot = '../_site';
+//const siteSRC = '../';
+var argv = require('yargs').argv;
+if (typeof argv.src == "undefined") {
+	console.log("Usage: gulp --src /path/to/jekyll/site");
+	process.exit();
+}
+
+const siteSRC = argv.src;
+console.log("GULPING: "+siteSRC);
+const siteDEST = siteSRC+'/_site';
 const files_siteContent =
 	[
-		'../_includes/**/*',
-        '../_layouts/**/*',
-        '../_posts/**/*',
-        '../_pages/**/*'
+		siteSRC+'/_includes/**/*',
+        siteSRC+'/_layouts/**/*',
+        siteSRC+'/_posts/**/*',
+        siteSRC+'/_pages/**/*'
 	];
 
-const files_scssAssets_in = '../_assets/scss/**/*.scss';
-const files_scssAssets_out = '../_assets/scss/**/*.scss';
+const files_scssAssets_in = siteSRC+'/_assets/scss/**/*.scss';
+const files_scssAssets_out = siteSRC+'/_assets/scss/**/*.scss';
 
-const files_cssAssets_in = '../_assets/css/**/*.css';
-const files_cssAssets_out = siteRoot + '/assets/css';
+const files_cssAssets_in = siteSRC+'/_assets/css/**/*.css';
+const files_cssAssets_out = siteDEST + '/assets/css';
 
-const files_jsAssets_in = '../_assets/js/**/*.js';
-const files_jsAssets_out = siteRoot + '/assets/js';
+const files_jsAssets_in = siteSRC+'/_assets/js/**/*.js';
+const files_jsAssets_out = siteDEST + '/assets/js';
 
-const files_imgAssets_in = '../_assets/img/**/*';
-const files_imgAssets_out = siteRoot + '/assets/img';
+const files_imgAssets_in = siteSRC+'/_assets/img/**/*';
+const files_imgAssets_out = siteDEST + '/assets/img';
 
-const files_tagList = '../_site/assets/data/tag_listing.csv';
-const files_categoryList = '../_site/assets/data/category_listing.csv';
+const files_tagList = siteSRC+'/_site/assets/data/tag_listing.csv';
+const files_categoryList = siteSRC+'/_site/assets/data/category_listing.csv';
 
 // We use our own scripts handle CSS, JS, Sass and Images and category stub generation
 const generateAssets = require('./generateAssets');
@@ -53,8 +62,8 @@ const runSequence = require('run-sequence');
 gulp.task('jekyll_render', () => {
 	const jekyll = child.spawn('jekyll',
 		['build',
-		'--source', '../',
-		'--destination', siteRoot,
+		'--source', siteSRC,
+		'--destination', siteDEST,
 		//'--incremental',
 		'--drafts',
 		'--quiet'
@@ -73,7 +82,7 @@ gulp.task('jekyll_render', () => {
 // Generate the tag stubs
 gulp.task('generate_tagStubs', () => {
 	generateStubs.init({
-		'jekyll_src': '../',
+		'jekyll_src': siteSRC,
 		'list_in': files_tagList,
 		'type': 'tags',
 		'clean': true
@@ -84,7 +93,7 @@ gulp.task('generate_tagStubs', () => {
 // Generate the category stubs
 gulp.task('generate_categoryStubs', () => {
 	generateStubs.init({
-		'jekyll_src': '../',
+		'jekyll_src': siteSRC,
 		'list_in': files_categoryList,
 		'type': 'categories',
 		'clean': true
@@ -93,7 +102,7 @@ gulp.task('generate_categoryStubs', () => {
 });
 
 gulp.task('copy_data', () => {
-	gulp.src('../assets/data/*').pipe(gulp.dest('../_site/assets/data/'));
+	gulp.src(siteSRC+'/_assets/data/*').pipe(gulp.dest(siteSRC+'/_site/assets/data/'));
 });
 
 
@@ -118,24 +127,24 @@ gulp.task('browserSync_serve', function(gulpCallback) {
 	generateAssets.processSCSS();
 	generateAssets.processJS();
 	runSequence(
-		'copy_data',
 		'jekyll_render',
 		'generate_tagStubs',
 		'generate_categoryStubs',
-		'jekyll_render'
+		'jekyll_render',
+		'copy_data'
 	);
 
 
 	// Setup browserSync
 	// Options: https://browsersync.io/docs/options
 	browserSync.init({
-		files: [siteRoot + '/**'],
+		files: [siteDEST + '/**'],
 		port: server_port,
 		open: open_browser_on_start,
 		server: {
-			baseDir: siteRoot,
+			baseDir: siteDEST,
 			// This middleware allows for "clean urls"
-			middleware: hygienist(siteRoot)
+			middleware: hygienist(siteDEST)
 		},
 		ghostMode: {
 			clicks: true,
@@ -158,6 +167,7 @@ gulp.task('browserSync_serve', function(gulpCallback) {
 			  		'generate_tagStubs',
   					'generate_categoryStubs',
   					'jekyll_render',
+					'copy_data',
 				 	 //generateAssets.processIMG,
   					 browserSync.reload
 				);

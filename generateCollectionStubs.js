@@ -23,7 +23,7 @@ gulp.task('generate', () => {
 	}
 
 	// Set output path
-	var outputPath = jekyll_src+"_"+collection_name;
+	var outputPath = jekyll_src+"/_"+collection_name;
 
 	// Singular-ize the output name
 	var outputName=collection_name;
@@ -32,7 +32,7 @@ gulp.task('generate', () => {
 	}else if (collection_name==='tags'){
 		outputName='tag';
 	}
-	
+
 	if (! fs.existsSync(outputPath)){
 		 fs.mkdirSync(outputPath, 0744);
 	}
