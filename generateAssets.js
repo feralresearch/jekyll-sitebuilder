@@ -12,7 +12,7 @@ const gulp = require('gulp');
 const runSequence = require('run-sequence');
 
 // Variables
-var scss_files, js_files, img_files;
+var scss_files, js_files, img_files, data_files;
 
 var runningAsScript = !module.parent;
 
@@ -31,6 +31,14 @@ gulp.task('generateAssets_img', () => {
 	}
 	// Just pass the files through
 	gulp.src(img_files_in).pipe(gulp.dest(img_files_out));
+});
+
+gulp.task('generateAssets_data', () => {
+	if (runningAsScript){
+		console.log("AssetPipeline: Data Handler passing files through --->");
+	}
+	// Just pass the files through
+	gulp.src(data_files_in).pipe(gulp.dest(data_files_out));
 });
 
 gulp.task('generateAssets_sass', () => {
@@ -58,6 +66,9 @@ module.exports = {
 
 		img_files_in = options.img_files_in;
 		img_files_out = options.img_files_out;
+
+		data_files_in = options.data_files_in;
+		data_files_out = options.data_files_out;
 	},
 
 	// Do SCSS processing
@@ -75,6 +86,12 @@ module.exports = {
 	processJS: function() {
 		runSequence('generateAssets_js');
 		return "Asset Pipeline: JS processing";
+	},
+
+	// Do Data file processing
+	processData: function() {
+		runSequence('generateAssets_data');
+		return "Asset Pipeline: Data processing";
 	}
 
 };
@@ -84,7 +101,8 @@ module.exports = {
 if(
 	(argv.scss_in && argv.scss_out) ||
 	(argv.js_in && argv.js_out) 	||
-	(argv.img_in && argv.img_out)
+	(argv.img_in && argv.img_out)	||
+	(argv.data_in && argv.data_out)
 ){
 	// Init
 	module.exports.init({
@@ -96,12 +114,15 @@ if(
 
 		'img_files_in':argv.img_in,
 		'img_files_out':argv.img_out,
+
+		'data_files_in':argv.data_in,
+		'data_files_out':argv.data_out,
 	});
 
 	if(scss_files_in){	module.exports.processSCSS(); }
 	if(js_files_in){	module.exports.processJS(); }
 	if(img_files_in){	module.exports.processIMG();  }
-
+	if(data_files_in){	module.exports.processData();  }
 }else{
 
 	if (runningAsScript){
