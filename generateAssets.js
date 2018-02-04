@@ -11,6 +11,13 @@ const argv = require('minimist')(process.argv.slice(2));
 const gulp = require('gulp');
 const runSequence = require('run-sequence');
 
+const babel = require('gulp-babel');
+const uglify = require('gulp-uglify');
+const sourcemaps = require('gulp-sourcemaps');
+const del = require('del');
+
+const f_debug = false;
+
 // Variables
 var scss_files, js_files, img_files, data_files;
 
@@ -18,11 +25,38 @@ var runningAsScript = !module.parent;
 
 // Gulp tasks
 gulp.task('generateAssets_js', () => {
-	if (runningAsScript){
-		console.log("AssetPipeline: JS Handler - not implemented yet, passing files through --->");
+	if (runningAsScript){}
+
+	if(f_debug){
+		gulp.src(js_files_in)
+			.pipe(concat('site.js'))
+			.pipe(gulp.dest(js_files_out));
+	}else{
+		gulp.src(js_files_in)
+			.pipe(concat('site.js'))
+			.pipe(babel())
+			.on('error', function(err) {
+				gutil.log(gutil.colors.red('[Error]'), err.toString());
+			})
+			.pipe(uglify({
+				output: { // http://lisperator.net/uglifyjs/codegen
+					beautify: f_debug,
+					comments: f_debug ? true : /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i,
+				},
+				compress: { // http://lisperator.net/uglifyjs/compress, http://davidwalsh.name/compress-uglify
+					sequences: !f_debug,
+					booleans: !f_debug,
+					conditionals: !f_debug,
+					hoist_funs: false,
+					hoist_vars: f_debug,
+					warnings: f_debug,
+				},
+			}))
+			.on('error', function(err) {
+				gutil.log(gutil.colors.red('[Error]'), err.toString());
+			})
+			.pipe(gulp.dest(js_files_out));
 	}
-	// Just pass the files through
-	gulp.src(js_files_in).pipe(gulp.dest(js_files_out));
 });
 
 gulp.task('generateAssets_img', () => {
